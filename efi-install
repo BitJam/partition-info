@@ -112,8 +112,18 @@ main() {
     check_dev $root_dev "Root partition"
     is_linux $root_dev || fatal "Root partition %s does not appear to be a Linux partition" $(eq $root_dev)
 
+    test -d /sys/firmware/efi || fatal "You must boot via EFI to install EFI bootloader (sorry)"
+
     #---- get and verify the arch
     [ ${#bits} -gt 0 -a ${#arch} -gt 0 ] && fatal "Can't specify both --bits and --arch"
+
+    local efi_bits_file=/sys/firmware/efi/fw_platform_size
+    if test -r $efi_bits_file; then
+        read efi_bits 2>/dev/null <$efi_bits_file
+        qsay "%s-bit EFI detected" $efi_bits
+        [ ${#bits} -gt 0 -o ${#arch} -gt 0 ] && fatal "Can't specify --bits or --arch when bits are automatically detected"
+        bits=$efi_bits
+    fi
 
     case $bits in
         "")              ;;
