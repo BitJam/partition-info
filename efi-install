@@ -635,9 +635,13 @@ set_color
 #  stderr  2 ---.     `---- / -------------------> screen
 #                \         /
 #         17      `-------'
+#
+# Note: the two key programs put their normal output on stderr so this is pointless
+#
+# main "$@" 17>&1 1>&2 2>&17 | while read line; do printf "%s\n" "$line" \
+#    | sed -e "/^$/d" -e "s/^/${warn_co}Error: $err_co/" -e "s/$/$nc/" \
+#    | tee -a $log_file; done
 
-main "$@" 17>&1 1>&2 2>&17 | while read line; do printf "%s\n" "$line" \
-    | sed -e "/^$/d" -e "s/^/${warn_co}Error: $err_co/" -e "s/$/$nc/" \
-    | tee -a $log_file; done
+main "$@"
 
 exit 0
