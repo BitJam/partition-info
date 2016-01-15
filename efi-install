@@ -524,8 +524,8 @@ all_labels() {
 fatal() {
     local fmt=$1
     shift
-    printf "$ME fatal error: $fmt\n" "$@" >&2
-    exit 2
+    printf "$warn_co$ME fatal error:$err_co $fmt$nc\n" "$@" >&2
+     [ "$FORCE" ] || exit 2
 }
 
 vsay() {
