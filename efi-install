@@ -5,7 +5,7 @@ ME=${0##*/}
 GRUB_DIR=/usr/lib/grub
 MNTPNT=/mnt/$ME
 EFI_DIR=/boot/efi
-ID="test-mx"
+NAME="test-mx"
 
 usage() {
     local ret=${1:-0}
@@ -13,21 +13,30 @@ usage() {
     cat <<Usage
 Usage:  $ME [options] <root-partition>
 
+Install grub2 bootloader for booting via UEFI.  You need to specify the root
+partition.  You can optionally specify an ESP partition or a drive to find
+the ESP partition.  The default is to use the first ESP partition on the same
+drive as the root partition.
+
 Options
     -a --arch=<arch>    The architecture of the UEFI: x86_64 or i386
     -b --bits={32|64}   Convenient way to specify the architecture
     -c --clean          Unmount everything (see --noclean)
     -e --esp=<device>   The ESP partition or the drive with the ESP partition
                         (Defaults to the drive the root partition is on)
+    -f --force          Ignore all warning signs and forge ahead 
+                        (best combined with --pretend)
     -g -grub-dir=<dir>  Directory to find grub files (default: $GRUB_DIR)
     -h --help           Show this usage
-    -i --id=<id>        The name of directory under /efi for booting
-                        (default $ID)
+    -i --info           Just show info about how this system was booted
     -m --mntpnt=<dir>   Use <dir> as the mountpoint for the root partition
                         (default $MNTPNT)
-    -n --noclean        Leave everything mounted
+    -n --name=<name>    The name of directory under /efi for booting
+                        (default $NAME)
+    -N --noclean        Leave everything mounted
     -p --pretend        Don't run any commands, just show them
-    -v --verbose        Show commands and run them
+    -q --quiet          Print less
+    -v --verbose        Show commands before running them
 Usage
 
     exit $ret
@@ -35,7 +44,7 @@ Usage
 
 takes_param() {
     case $1 in
-        -arch|-bits|-esp|-grub-dir|-id|-mntpnt|[abegim]) return 0 ;;
+        -arch|-bits|-esp|-grub-dir|-name|-mntpnt|[abegmn]) return 0 ;;
     esac
     return 1
 }
@@ -43,24 +52,27 @@ takes_param() {
 eval_argument() {
     local arg=$1 val=$2
         case $arg in
-                -arch|a) arch=$val     ;;
-            -arch=*|a=*) arch=$val     ;;
-                -bits|b) bits=$val     ;;
-               -clean|c) clean=true    ;;
-            -bits=*|b=*) bits=$val     ;;
-                 -esp|e) esp_part=$val ;;
-             -esp=*|e=*) esp_part=$val ;;
-           --grub-dir|g) GRUB_DIR=$val ;;
-       --grub-dir=*|g=*) GRUB_DIR=$val ;;
-                -help|h) usage         ;;
-                  -id|i) ID=$val       ;;
-              -id=*|i=*) ID=$val       ;;
-              -mntpnt|m) MNTPNT=$val   ;;
-          -mntpnt=*|m=*) MNTPNT=$val   ;;
-             -noclean|n) NO_CLEAN=true ;;
-             -pretend|p) PRETEND=true  ;;
-             -verbose|v) VERBOSE=true  ;;
- 
+                -arch|a) arch=$val       ;;
+            -arch=*|a=*) arch=$val       ;;
+                -bits|b) bits=$val       ;;
+            -bits=*|b=*) bits=$val       ;;
+               -clean|c) clean=true      ;;
+                 -esp|e) esp_part=$val   ;;
+             -esp=*|e=*) esp_part=$val   ;;
+               -force|f) FORCE=true      ;;
+           --grub-dir|g) GRUB_DIR=$val   ;;
+       --grub-dir=*|g=*) GRUB_DIR=$val   ;;
+                -help|h) usage           ;;
+                -info|i) do_info; exit 0 ;;
+              -mntpnt|m) MNTPNT=$val     ;;
+          -mntpnt=*|m=*) MNTPNT=$val     ;;
+                -name|n) NAME=$val       ;;
+            -name=*|n=*) NAME=$val       ;;
+             -noclean|N) NO_CLEAN=true   ;;
+             -pretend|p) PRETEND=true    ;;
+               -quiet|q) QUIET=true      ;;
+             -verbose|v) VERBOSE=true    ;;
+
              *) fatal "Unknown parameter %s" $(eq -$arg)
     esac
 }
@@ -70,7 +82,7 @@ main() {
 
     [ $# -eq 0 ] && usage
 
-    local SHORT_STACK="abcehimnpv"
+    local SHORT_STACK="abcefghimnNpqv"
     local arch bits esp_part root_part mounted clean PRETEND VERBOSE
 
     # Allow options before and after the command
