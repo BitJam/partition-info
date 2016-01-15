@@ -618,6 +618,12 @@ set_color() {
       err_co=$red
 }
 
+qsay() {
+    local fmt=$1
+    shift
+    printf "$cyan$fmt$nc\n" "$@"
+}
+
 eq() { echo "$warn_co$*$err_co" ;}
 
 set_color
