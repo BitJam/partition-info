@@ -539,7 +539,13 @@ pretend() {
         echo "$cyan$@$nc"
     fi
 
-    [ -z "$PRETEND" ] && "$@"
+    [ "$PRETEND" ] && return
+
+    "$@" && return
+
+    local cmnd=$1
+    [ "$cmnd" = chroot ] && cmnd=$2
+    fatal "Command %s failed" "$(eq $cmnd)"
 }
 
 #-------------------------------------------------------------------------------
