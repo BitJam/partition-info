@@ -229,7 +229,6 @@ check_dev() {
 
 check_esp() {
     local dev=/dev/${1#/dev/}
-    echo check_esp $dev
     check_dev $dev "ESP partition"
     local expr="(c12a7328-f81f-11d2-ba4b-00a0c93ec93b|0xef)$"
     lsblk --nodeps --noheadings --list --output name,parttype $dev | egrep -q "$expr" \
@@ -387,8 +386,6 @@ _do_parts() {
         # Note that lsblk escapes double-quotes and dollar signs when --pairs
         # is used which makes doing the eval safe
         eval "$line"
-
-        #echo "$line"; #continue
 
         [ "$TYPE" = "disk" ] && continue
 
