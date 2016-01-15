@@ -179,9 +179,38 @@ main() {
     exit 0
 }
 
+do_info() {
+    local fmt="$cyan%20s:$white %s$nc\n"
+    printf "$fmt" "kernel version" "$(uname -r)"
+
+    local arch=$(uname -m)
+    case $arch in
+        x86_64) arch="64-bit" ;;
+          i686) arch="32-bit" ;;
+    esac
+
+    printf "$fmt" "kernel architecture" "$arch"
+
+    if test -d /sys/firmware/efi; then
+        local efi_bits_file=/sys/firmware/efi/fw_platform_size
+        if test -r $efi_bits_file; then
+            read efi_bits 2>/dev/null <$efi_bits_file
+            case $efi_bits in
+                32)  printf "$fmt" "booted via" "32-bit UEFI"    ;;
+                64)  printf "$fmt" "booted via" "64-bit UEFI"    ;;
+                64)  printf "$fmt" "booted via" "$efi_bits UEFI" ;;
+            esac
+        else
+            printf "$fmt" "booted via" "UEFI (${err_co}unknown arch$nc)"
+        fi
+    else
+        printf "$fmt" "booted via" "legacy"
+    fi
+}
+
 clean_up() {
     [ "$NO_CLEAN" ] && return
-    vsay "cleaning up"
+    qsay "cleaning up"
     is_mounted $MNTPNT && pretend umount -R $MNTPNT
     return 0
 }
