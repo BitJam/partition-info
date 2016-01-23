@@ -119,8 +119,8 @@ main() {
     if test -r $efi_bits_file; then
         read efi_bits 2>/dev/null <$efi_bits_file
         qsay "%s-bit EFI detected" $efi_bits
-        [ ${#bits} -gt 0 -o ${#arch} -gt 0 ] && fatal "Can't specify --bits or --arch when bits are automatically detected"
-        bits=$efi_bits
+        #[ ${#bits} -gt 0 -o ${#arch} -gt 0 ] && fatal "Can't specify --bits or --arch when bits are automatically detected"
+        : ${bits:=$efi_bits}
     fi
 
     case $bits in
