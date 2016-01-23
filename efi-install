@@ -29,8 +29,7 @@ Options
     -g -grub-dir=<dir>  Directory to find grub files (default: $GRUB_DIR)
     -h --help           Show this usage
     -i --info           Just show info about how this system was booted
-    -m --mntpnt=<dir>   Use <dir> as the mountpoint for the root partition
-                        (default $MNTPNT)
+    -m --mount          Stop after mounting the partitions
     -n --name=<name>    The name of directory under /efi for booting
                         (default $NAME)
     -N --noclean        Leave everything mounted
@@ -44,7 +43,7 @@ Usage
 
 takes_param() {
     case $1 in
-        -arch|-bits|-esp|-grub-dir|-name|-mntpnt|[abegmn]) return 0 ;;
+        -arch|-bits|-esp|-grub-dir|-name|[abegn]) return 0 ;;
     esac
     return 1
 }
@@ -52,26 +51,25 @@ takes_param() {
 eval_argument() {
     local arg=$1 val=$2
         case $arg in
-                -arch|a) arch=$val       ;;
-            -arch=*|a=*) arch=$val       ;;
-                -bits|b) bits=$val       ;;
-            -bits=*|b=*) bits=$val       ;;
-               -clean|c) clean=true      ;;
-                 -esp|e) esp_part=$val   ;;
-             -esp=*|e=*) esp_part=$val   ;;
-               -force|f) FORCE=true      ;;
-           --grub-dir|g) GRUB_DIR=$val   ;;
-       --grub-dir=*|g=*) GRUB_DIR=$val   ;;
-                -help|h) usage           ;;
-                -info|i) do_info; exit 0 ;;
-              -mntpnt|m) MNTPNT=$val     ;;
-          -mntpnt=*|m=*) MNTPNT=$val     ;;
-                -name|n) NAME=$val       ;;
-            -name=*|n=*) NAME=$val       ;;
-             -noclean|N) NO_CLEAN=true   ;;
-             -pretend|p) PRETEND=true    ;;
-               -quiet|q) QUIET=true      ;;
-             -verbose|v) VERBOSE=true    ;;
+                -arch|a) arch=$val              ;;
+            -arch=*|a=*) arch=$val              ;;
+                -bits|b) bits=$val              ;;
+            -bits=*|b=*) bits=$val              ;;
+               -clean|c) clean=true             ;;
+                 -esp|e) esp_part=${val#/dev/}  ;;
+             -esp=*|e=*) esp_part=${val#/dev/}  ;;
+               -force|f) FORCE=true             ;;
+           --grub-dir|g) GRUB_DIR=$val          ;;
+       --grub-dir=*|g=*) GRUB_DIR=$val          ;;
+                -help|h) usage                  ;;
+                -info|i) do_info; exit 0        ;;
+               -mount|m) ONLY_MOUNT=true        ;;
+                -name|n) NAME=$val              ;;
+            -name=*|n=*) NAME=$val              ;;
+             -noclean|N) NO_CLEAN=true          ;;
+             -pretend|p) PRETEND=true           ;;
+               -quiet|q) QUIET=true             ;;
+             -verbose|v) VERBOSE=true           ;;
 
              *) fatal "Unknown parameter %s" $(eq -$arg)
     esac
@@ -158,7 +156,7 @@ main() {
 
     #---- Check the mountpoint ...
     is_mounted $MNTPNT && fail "Directory $MNTPNT is already a mountpoint"
-    trap clean_up EXIT
+    [ "$ONLY_MOUNT" ] || trap clean_up EXIT
 
     pretend mkdir -p $MNTPNT
     pretend mount $root_dev $MNTPNT
@@ -170,6 +168,11 @@ main() {
     local full_efi_dir=$MNTPNT$EFI_DIR
     pretend mkdir -p $full_efi_dir
     pretend mount /dev/$esp_part $full_efi_dir
+
+    if [ "$ONLY_MOUNT" ]; then
+        qsay "Stopped after mounting.  Use --clean to umount."
+        exit 0
+    fi
 
     pretend chroot $MNTPNT /usr/sbin/grub-install --target=$arch-efi --efi-directory=$EFI_DIR --boot-directory=$EFI_DIR --bootloader-id="$NAME" 2>&1
     pretend chroot $MNTPNT /usr/sbin/grub-mkconfig -o /boot/efi/grub/grub.cfg 2>&1
