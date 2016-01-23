@@ -190,6 +190,12 @@ main() {
         fi
         pretend chroot $MNTPNT /usr/sbin/grub-install --target=$arch-efi --efi-directory=$EFI_DIR --boot-directory=$EFI_DIR --bootloader-id="$NAME" 2>&1
         pretend chroot $MNTPNT /usr/sbin/grub-mkconfig -o /boot/efi/grub/grub.cfg 2>&1
+
+        local bg_image=/usr/local/share/backgrounds/MX15/grub/Squam_Lake-grub.png
+        if test -r $bg_image; then
+            qsay "Copy $(basename $bg_image) to ESP partition"
+            pretend cp $bg_image $full_efi_dir/grub/
+        fi
     fi
 
     clean_up
