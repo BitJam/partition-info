@@ -77,7 +77,6 @@ eval_argument() {
     esac
 }
 
-
 main() {
 
     [ $# -eq 0 ] && usage
@@ -90,7 +89,6 @@ main() {
     shift $SHIFT
 
     [ $# -gt 0 ] || fatal "Expected a partition device"
-
 
     local root_part=${1#/dev/}
     shift
