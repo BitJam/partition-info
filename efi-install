@@ -322,8 +322,11 @@ pretend() {
     "$@" && return
 
     local cmnd=$1
-    [ "$cmnd" = chroot ] && cmnd=$2
-    fatal "Command %s failed" "$(eq $cmnd)"
+    if [ "$cmnd" = chroot ]; then
+        fatal "Command %s failed inside %s chroot" "$(eq $3)" "$(eq $2)"
+    else
+        fatal "Command %s failed" "$(eq $cmnd)"
+    fi
 }
 
 #-------------------------------------------------------------------------------
