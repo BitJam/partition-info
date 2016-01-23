@@ -182,7 +182,7 @@ main() {
         local xtra_tgz=/live/boot-dev/antiX/xtra.tgz
         local did_extract=$MNTPNT/root/did-extract-xtra
         local deb_file=/root/grub-efi-ia32-bin_2.02~beta2-22+deb8u1_amd64.deb
-        if [ -r $xtra_tgz -a ! -e $did_extract); then
+        if [ -r $xtra_tgz -a ! -e $did_extract ]; then
             qsay "Extracting $(basename $xtra_tgz) to installed system"
             pretend tar xzf $xtra_tgz --directory=$MNTPNT
             test -r $MNTPNT$deb_file && pretend chroot $MNTPNT /usr/bin/dpkg -i $deb_file
