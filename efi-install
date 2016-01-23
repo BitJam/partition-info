@@ -56,7 +56,7 @@ eval_argument() {
             -arch=*|a=*) arch=$val              ;;
                 -bits|b) bits=$val              ;;
             -bits=*|b=*) bits=$val              ;;
-               -clean|c) clean_up; exit 0       ;;
+               -clean|c) do_clean=true          ;;
                  -esp|e) esp_part=${val#/dev/}  ;;
              -esp=*|e=*) esp_part=${val#/dev/}  ;;
                -force|f) FORCE=true             ;;
@@ -83,7 +83,7 @@ main() {
     [ $# -eq 0 ] && usage
 
     local SHORT_STACK="abcefghimnNpqv"
-    local arch bits esp_part root_part mounted PRETEND VERBOSE
+    local arch bits esp_part root_part mounted do_clean PRETEND VERBOSE
 
     # Allow options before and after the command
     read_params "$@"
@@ -98,6 +98,11 @@ main() {
     # Allow options before and after the command
     read_params "$@"
     shift $SHIFT
+
+    if [ "$do_clean" ]; then
+        clean_up
+        exit 0
+    fi
 
     [ $# -gt 0 ]                    && fatal "Expected only one partition device. Got: %s" "$(pq $root_part $*)"
     [ $UID -ne 0 -a -z "$PRETEND" ] && fatal "This progam must be run as root (or in pretend mode)"
