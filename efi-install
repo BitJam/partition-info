@@ -29,6 +29,7 @@ Options
     -g -grub-dir=<dir>  Directory to find grub files (default: $GRUB_DIR)
     -h --help           Show this usage
     -i --info           Just show info about how this system was booted
+    -k --kludge         Perform kludges (mostly for 32-bit UEFI)
     -m --mount          Stop after mounting the partitions
     -n --name=<name>    The name of directory under /efi for booting
                         (default $NAME)
@@ -63,6 +64,7 @@ eval_argument() {
        --grub-dir=*|g=*) GRUB_DIR=$val          ;;
                 -help|h) usage                  ;;
                 -info|i) do_info; exit 0        ;;
+              -kludge|k) DO_KLUDGES=true        ;;
                -mount|m) ONLY_MOUNT=true        ;;
                 -name|n) NAME=$val              ;;
             -name=*|n=*) NAME=$val              ;;
@@ -174,12 +176,72 @@ main() {
         exit 0
     fi
 
-    pretend chroot $MNTPNT /usr/sbin/grub-install --target=$arch-efi --efi-directory=$EFI_DIR --boot-directory=$EFI_DIR --bootloader-id="$NAME" 2>&1
-    pretend chroot $MNTPNT /usr/sbin/grub-mkconfig -o /boot/efi/grub/grub.cfg 2>&1
+    if [ "$DO_KLUDGES" ]; then
+        do_kludges $arch $full_efi_dir
+    else
+
+        local xtra_tgz=/live/boot-dev/antiX/xtra.tgz
+        local did_extract=$MNTPNT/root/did-extract-xtra
+        if [ -r $xtra_tgz -a ! -e $did_extract); then
+            qsay "Extracting $(basename $xtra_tgz) to installed system"
+            (cd $MNTPNT && tar xzf $xtra_tgz)
+            touch $did_extract
+        fi
+        pretend chroot $MNTPNT /usr/sbin/grub-install --target=$arch-efi --efi-directory=$EFI_DIR --boot-directory=$EFI_DIR --bootloader-id="$NAME" 2>&1
+        pretend chroot $MNTPNT /usr/sbin/grub-mkconfig -o /boot/efi/grub/grub.cfg 2>&1
+    fi
 
     clean_up
     trap "" EXIT
     exit 0
+}
+
+do_kludges() {
+    local arch=$1 esp_mp=$2
+    local bg_image=/usr/local/share/backgrounds/MX15/grub/Squam_Lake-grub.png
+    if test -r $bg_image; then
+        qsay "Copy $(basename $bg_image) to ESP partition"
+        pretend cp $bg_image $esp_mp/boot/grub/
+    fi
+
+    [ "$arch" = i386 ] || return
+
+    local grub_targ=$esp_mp/boot/grub
+    local grub_sorc=$esp_mp/grub
+
+    if [ -d $grub_sorc -a ! -d $grub_targ ]; then
+        qsay "Copy /grub to /boot/grub on ESP partition"
+        pretend mkdir $(dirname $grub_targ)
+        pretend cp -r $grub_sorc $(dirname $grub_targ)
+    fi
+
+    local efi_live_file=/live/boot-dev/efi/boot/bootia32.efi
+    local efi_targ_file=$esp_mp/efi/$NAME/grubia32.efi
+
+    if [ -r $efi_live_file -a -e $efi_targ_file ]; then
+        qsay "Copy $(basename $efi_file) from Live to /efi/$NAME/$efi_targ_file"
+        pretend cp $efi_targ_file $efi_targ_file.orig
+        pretend cp $efi_live_file $efi_targ_file
+    fi
+
+    # Maybe we only need this one file?!
+    local i386_grub_targ=$esp_mp/boot/grub/i386-efi/grub.cfg
+    local i386_grub_live=/live/boot-dev/boot/grub/i386-efi/grub.cfg
+
+    if [ -e "$i386_grub_live" -a ! -e "$i386_grub_targ" ]; then
+        qsay "Copy i386-efi/grub.cfg to ESP partition"
+        pretend cp $i386_grub_live $i386_grub_targ
+    fi
+
+    return
+
+    # local grub_live_mods=/live/boot-dev/boot/grub/i386-efi
+    # local grub_targ_mods=$esp_mp/boot/grub/i386-efi
+    # if [ ! -e $grub_targ_mods.sav ]; then
+    #     qsay "Copy grub modules from Live to ESP"
+    #     pretend mv $grub_targ_mods $grub_targ_mods.sav
+    #     pretend cp -r $grub_live_mods $(dirname grub_targ_mods)
+    # fi
 }
 
 do_info() {
