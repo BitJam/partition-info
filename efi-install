@@ -24,7 +24,7 @@ Options
     -c --clean          Unmount everything (see --noclean)
     -e --esp=<device>   The ESP partition or the drive with the ESP partition
                         (Defaults to the drive the root partition is on)
-    -f --force          Ignore all warning signs and forge ahead 
+    -f --force          Ignore all warning signs and forge ahead
                         (best combined with --pretend)
     -g -grub-dir=<dir>  Directory to find grub files (default: $GRUB_DIR)
     -h --help           Show this usage
@@ -168,6 +168,7 @@ main() {
     pretend mount --bind /dev  $MNTPNT/dev
 
     local full_efi_dir=$MNTPNT$EFI_DIR
+
     pretend mkdir -p $full_efi_dir
     pretend mount /dev/$esp_part $full_efi_dir
 
