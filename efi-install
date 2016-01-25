@@ -29,7 +29,6 @@ Options
     -g -grub-dir=<dir>  Directory to find grub files (default: $GRUB_DIR)
     -h --help           Show this usage
     -i --info           Just show info about how this system was booted
-    -k --kludge         Perform kludges (mostly for 32-bit UEFI)
     -m --mount          Stop after mounting the partitions
     -n --name=<name>    The name of directory under /efi for booting
                         (default $NAME)
@@ -64,7 +63,6 @@ eval_argument() {
        --grub-dir=*|g=*) GRUB_DIR=$val          ;;
                 -help|h) usage                  ;;
                 -info|i) do_info; exit 0        ;;
-              -kludge|k) DO_KLUDGES=true        ;;
                -mount|m) ONLY_MOUNT=true        ;;
                 -name|n) NAME=$val              ;;
             -name=*|n=*) NAME=$val              ;;
@@ -172,33 +170,22 @@ main() {
         exit 0
     fi
 
-    if [ "$DO_KLUDGES" ]; then
-        do_kludges $arch $full_efi_dir
-    else
-
-        local xtra_tgz=/live/boot-dev/antiX/xtra.tgz
-        local did_extract=$MNTPNT/root/did-extract-xtra
-        local deb_file=/root/grub-efi-ia32-bin_2.02~beta2-22+deb8u1_amd64.deb
-        if [ -r $xtra_tgz -a ! -e $did_extract ]; then
-            qsay "Extracting $(basename $xtra_tgz) to installed system"
-            pretend tar xzf $xtra_tgz --directory=$MNTPNT
-            test -r $MNTPNT$deb_file && pretend chroot $MNTPNT /usr/bin/dpkg -i $deb_file
-            touch $did_extract
-        fi
-
-
-        local arch_dir=$GRUB_DIR/$arch-efi
-        test -d $MNTPNT$arch_dir || fatal "Could not find directory %s" "$(eq $arch_dir)"
-
-        pretend chroot $MNTPNT /usr/sbin/grub-install --target=$arch-efi --efi-directory=$EFI_DIR --boot-directory=$EFI_DIR --bootloader-id="$NAME" 2>&1
-        pretend chroot $MNTPNT /usr/sbin/grub-mkconfig -o /boot/efi/grub/grub.cfg 2>&1
-
-        local bg_image=/usr/local/share/backgrounds/MX15/grub/Squam_Lake-grub.png
-        if test -r $bg_image; then
-            qsay "Copy $(basename $bg_image) to ESP partition"
-            pretend cp $bg_image $full_efi_dir/grub/
-        fi
+    local xtra_tgz=/live/boot-dev/antiX/xtra.tgz
+    local did_extract=$MNTPNT/root/did-extract-xtra
+    local deb_file=/root/grub-efi-ia32-bin_2.02~beta2-22+deb8u1_amd64.deb
+    if [ -r $xtra_tgz -a ! -e $did_extract ]; then
+        qsay "Extracting $(basename $xtra_tgz) to installed system"
+        pretend tar xzf $xtra_tgz --directory=$MNTPNT
+        test -r $MNTPNT$deb_file && pretend chroot $MNTPNT /usr/bin/dpkg -i $deb_file
+        touch $did_extract
     fi
+
+
+    local arch_dir=$GRUB_DIR/$arch-efi
+    test -d $MNTPNT$arch_dir || fatal "Could not find directory %s" "$(eq $arch_dir)"
+
+    pretend chroot $MNTPNT /usr/sbin/grub-install --target=$arch-efi --efi-directory=$EFI_DIR --boot-directory=$EFI_DIR --bootloader-id="$NAME" 2>&1
+    pretend chroot $MNTPNT /usr/sbin/grub-mkconfig -o /boot/efi/grub/grub.cfg 2>&1
 
     clean_up
     trap "" EXIT
