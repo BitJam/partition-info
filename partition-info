@@ -2,7 +2,7 @@
 
 ME=${0##*/}
 
-MAJOR_LIST="3,8,22,179"
+MAJOR_LIST="3,8,22,179,259"
 # See the Linux kernel file Documentation/devices.txt for device numbers
 #
 #   3 block First MFM, RLL and IDE hard disk/CD-ROM interface   hda, hdb
@@ -20,8 +20,10 @@ MAJOR_LIST="3,8,22,179"
 # 128 block SCSI disk devices (128-143)
 # 129 block SCSI disk devices (144-159)
 # ...
-# 135 block SCSI disk devices (240-255)
+# 135 block SCSI disk devices (240-255)A
 #
+# 259 block	Block Extended Major  Used dynamically to hold additional partition
+#     minor numbers and allow large numbers of partitions per device
 
 LSBLK_ARGS="--pairs --noheadings"
 DRIVE_ARGS="$LSBLK_ARGS --nodeps"
