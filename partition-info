@@ -2,7 +2,7 @@
 
 ME=${0##*/}
 
-MAJOR_LIST="3,8,22,179,259"
+MAJOR_LIST="3,8,22,179,202,259"
 # See the Linux kernel file Documentation/devices.txt for device numbers
 #
 #   3 block First MFM, RLL and IDE hard disk/CD-ROM interface   hda, hdb
