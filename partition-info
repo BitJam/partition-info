@@ -200,7 +200,7 @@ eval_argument() {
         -noheadings|n) SHOW_HEADER=       ;;
                -raw|r) SIMPLIFY=      ;;
               -tabs|t) TAB_DELIMIT=true   ;;
-                    *) fatal "Unknown parameter -$arg"
+                    *) fatal "Unknown parameter -$arg" ;;
     esac
 }
 
