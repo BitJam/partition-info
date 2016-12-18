@@ -234,7 +234,9 @@ do_split_device() {
     local root part
     case $dev in
         mmcblk*p[1-9]) root=${dev%p[1-9]}  ; part=${dev#${root}p}  ;;
+          nvme*p[1-9]) root=${dev%p[1-9]}  ; part=${dev#${root}p}  ;;
               mmcblk*) root=$dev                                   ;;
+                nvme*) root=$dev                                   ;;
                     *) root=${dev%[0-9]}   ; root=${root%[0-9]}
                        part=${dev#$root}                           ;;
     esac
@@ -449,6 +451,7 @@ get_drive() {
     local drive part=${1##*/}
     case $part in
         mmcblk*) echo ${part%p[0-9]}                        ;;
+          nvme*) echo ${part%p[0-9]}                        ;;
               *) drive=${part%[0-9]}  ; echo ${drive%[0-9]} ;;
     esac
 }
