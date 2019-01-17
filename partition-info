@@ -278,7 +278,7 @@ do_is_linux() {
              4f68bce3-e8cd-4db1-96e7-fbcaf984b709) success ;;
           # No part-type or Windows data
           ""|ebd0a0a2-b9e5-4433-87c0-68b6b72699c7)         ;;
-                                                *) failure ;;
+                                                *) continue ;;
     esac
 
     case $FSTYPE in
