@@ -2,7 +2,7 @@
 
 ME=${0##*/}
 
-MAJOR_LIST="3,8,22,179,202,259"
+MAJOR_LIST="3,8,22,179,202,254,259"
 # See the Linux kernel file Documentation/devices.txt for device numbers
 #
 #   3 block First MFM, RLL and IDE hard disk/CD-ROM interface   hda, hdb
@@ -21,6 +21,13 @@ MAJOR_LIST="3,8,22,179,202,259"
 # 129 block SCSI disk devices (144-159)
 # ...
 # 135 block SCSI disk devices (240-255)A
+#
+# 240-254 block	LOCAL/EXPERIMENTAL USE
+#		Allocated for local/experimental use.  For devices not
+#		assigned official numbers, these ranges should be
+# used in order to avoid conflicting with future assignments
+#
+# 254 block used by QEMU/KVM
 #
 # 259 block	Block Extended Major  Used dynamically to hold additional partition
 #     minor numbers and allow large numbers of partitions per device
