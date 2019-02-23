@@ -2,6 +2,9 @@
 
 ME=${0##*/}
 
+VERSION="1.10.00"
+VERSION_DATE="Fri Feb 15 13:16:12 MST 2019"
+
 MAJOR_LIST="3,8,22,179,202,254,259"
 # See the Linux kernel file Documentation/devices.txt for device numbers
 #
@@ -21,6 +24,13 @@ MAJOR_LIST="3,8,22,179,202,254,259"
 # 129 block SCSI disk devices (144-159)
 # ...
 # 135 block SCSI disk devices (240-255)A
+#
+# 240-254 block	LOCAL/EXPERIMENTAL USE
+#		Allocated for local/experimental use.  For devices not
+#		assigned official numbers, these ranges should be
+# used in order to avoid conflicting with future assignments
+#
+# 254 block used by QEMU/KVM
 #
 # 259 block	Block Extended Major  Used dynamically to hold additional partition
 #     minor numbers and allow large numbers of partitions per device
@@ -88,6 +98,8 @@ Commands:
         Display information for all swap partitions
 
 Options:
+    -a, --add-major=<num>
+        Add <num> to the list of major devices
 
     -d, --dev-output
         Add /dev/ to device names in lists.
@@ -124,6 +136,9 @@ Options:
 
     -t, --tabs
         Tab delimit output.
+
+    -t, --version
+        Show version and exit
 Usage
 
     exit $ret
@@ -135,7 +150,7 @@ main() {
 
     local SHIFT DEV_OUTPUT MIN_SIZE TAB_DELIMIT EXCLUDE SIMPLIFY=true
     local EX_BOOT EX_EFI EX_SWAP FULL_FIELDS SHOW_HEADER=true
-    local SHORT_STACK="defhmMnrt"
+    local SHORT_STACK="adefhmMnrtv"
 
     # Allow options before and after the command
     read_params "$@"
@@ -196,6 +211,8 @@ main() {
 eval_argument() {
     local arg=$1 val=$2
         case $arg in
+         -add-major|a) add_major "$val"   ;;
+         -add-major=*) add_major "$val"   ;;
         -dev-output|d) DEV_OUTPUT=/dev/   ;;
               -help|h) usage              ;;
            -exclude|e) EXCLUDE=$val       ;;
@@ -206,8 +223,9 @@ eval_argument() {
          -major-num|M) MAJOR_LIST=$val    ;;
      -major-num=*|M=*) MAJOR_LIST=$val    ;;
         -noheadings|n) SHOW_HEADER=       ;;
-               -raw|r) SIMPLIFY=      ;;
+               -raw|r) SIMPLIFY=          ;;
               -tabs|t) TAB_DELIMIT=true   ;;
+           -version|v) show_version       ;;
                     *) fatal "Unknown parameter -$arg" ;;
     esac
 }
@@ -215,6 +233,7 @@ eval_argument() {
 takes_param() {
     case $1 in
         -exclude|-major-num|-min-size|[emM]) return 0 ;;
+                               -add-major|a) return 0 ;;
     esac
     return 1
 }
@@ -560,6 +579,24 @@ all_labels() {
 fatal() {
     echo "$ME fatal error: $*"
     exit 2
+}
+
+add_major() {
+    # spaces to commas
+    add=${1// /,}
+
+    # append and remove repeated commas
+    MAJOR_LIST=$(echo "$MAJOR_LIST,$add" | tr -s ",")
+
+    # remove trailing comma
+    MAJOR_LIST=${MAJOR_LIST%,}
+}
+
+show_version() {
+    local fmt="%s: version %s (%s)\n"
+    printf "$fmt" "$ME" "$VERSION" "$VERSION_DATE"
+    printf "Major devices: %s\n" "$MAJOR_LIST"
+    exit 0
 }
 
 #-------------------------------------------------------------------------------
