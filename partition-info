@@ -274,12 +274,14 @@ do_split_device() {
 
     local root part
     case $dev in
-        mmcblk*p[1-9]) root=${dev%p[1-9]}  ; part=${dev#${root}p}  ;;
-          nvme*p[1-9]) root=${dev%p[1-9]}  ; part=${dev#${root}p}  ;;
-              mmcblk*) root=$dev                                   ;;
-                nvme*) root=$dev                                   ;;
-                    *) root=${dev%[0-9]}   ; root=${root%[0-9]}
-                       part=${dev#$root}                           ;;
+            mmcblk*p[1-9]) root=${dev%p[1-9]}       ; part=${dev#${root}p}  ;;
+       mmcblk*p[1-9][0-9]) root=${dev%p[1-9][0-9]}  ; part=${dev#${root}p}  ;;
+              nvme*p[1-9]) root=${dev%p[1-9]}       ; part=${dev#${root}p}  ;;
+         nvme*p[1-9][0-9]) root=${dev%p[1-9][0-9]}  ; part=${dev#${root}p}  ;;
+                  mmcblk*) root=$dev                                        ;;
+                    nvme*) root=$dev                                        ;;
+                        *) root=${dev%[0-9]}        ; root=${root%[0-9]}
+                           part=${dev#$root}                                ;;
     esac
 
     echo "$root $part" | sed 's/ $//'
@@ -491,8 +493,10 @@ Lsblk
 get_drive() {
     local drive part=${1##*/}
     case $part in
-        mmcblk*) echo ${part%p[0-9]}                        ;;
-          nvme*) echo ${part%p[0-9]}                        ;;
+            mmcblk*p[1-9]) echo ${part%p[1-9]}         ;;
+       mmcblk*p[1-9][0-9]) echo ${part%p[1-9][0-9]}    ;;
+              nvme*p[1-9]) echo ${part%p[1-9]}         ;;
+         nvme*p[1-9][0-9]) echo ${part%p[1-9][0-9]}    ;;
               *) drive=${part%[0-9]}  ; echo ${drive%[0-9]} ;;
     esac
 }
