@@ -504,11 +504,41 @@ get_drive() {
 }
 
 get_size() {
+    local part="/dev/${1#/dev/}"
+    local human=$(lsblk -dno size "$part")
+    #echo "$part $human $(human_to_meg)" >&2
+    human_to_meg "$human"
+}
+
+human_to_meg() {
+    local human=$1
+
+    local raw factor  meg=$((1024 * 1024))
+    local gig=$((meg * 1024))
+    local ter=$((gig * 1024))
+    local pet=$((ter * 1024))
+
+    case $human in
+        *[mM]) raw=${human%[mM]}  ; factor=1    ;;
+        *[gG]) raw=${human%[gG]}  ; factor=1024 ;;
+        *[gG]) raw=${human%[gG]}  ; factor=$meg ;;
+        *[tT]) raw=${human%[tT]}  ; factor=$gig ;;
+        *[pP]) raw=${human%[pP]}  ; factor=$ter ;;
+        *[eE]) raw=${human%[eE]}  ; factor=$pet ;;
+            *) raw=0              ; factor=0    ;;
+    esac
+
+    awk "BEGIN{printf \"%d\n\", $raw * $factor}"
+}
+
+
+get_size_old() {
     local part=${1##*/}
     local drive=$(get_drive $part)
     local path=$drive
     [ "$drive" != "$part" ] && path=$drive/$part
     local file=/sys/block/$path/size
+    echo "size_file: $file" >&2
     test -r $file && cat $file
 }
 
@@ -534,7 +564,7 @@ greater_than_min_size() {
     [ -z "$MIN_SIZE" ] && return 0
     local raw_size=$(get_size $dev)
     [ -z "$raw_size" ] && return 1
-    [ $((raw_size / 2 / 1024)) -gt $MIN_SIZE ]
+    [ "$raw_size" -gt $MIN_SIZE ]
     return $?
 }
 
