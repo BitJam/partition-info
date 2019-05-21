@@ -3,8 +3,8 @@
 ME=${0##*/}
 #set -xv
 
-VERSION="1.11.00"
-VERSION_DATE="Tue 21 May 2019 05:03:40 AM MDT"
+VERSION="1.12.00"
+VERSION_DATE="Tue 21 May 2019 05:15:52 PM MDT"
 
 MAJOR_LIST="3,8,22,179,202,254,259"
 # See the Linux kernel file Documentation/devices.txt for device numbers
