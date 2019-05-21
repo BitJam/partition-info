@@ -23,7 +23,9 @@ MAJOR_LIST="3,8,22,179,202,254,259"
 # 128 block SCSI disk devices (128-143)
 # 129 block SCSI disk devices (144-159)
 # ...
-# 135 block SCSI disk devices (240-255)A
+# 135 block SCSI disk devices (240-255)
+#
+# 179 block MMC block devices
 #
 # 240-254 block	LOCAL/EXPERIMENTAL USE
 #		Allocated for local/experimental use.  For devices not
@@ -77,9 +79,9 @@ Commands:
         found or not. An empty string sigifies no ESP partition was found.
         Failure indicates a problem with the command line argument or a
         non-existent device.
-        
+
     find-esps=<device>
-        Print the name of all ESP partitions on the same disk device 
+        Print the name of all ESP partitions on the same disk device
         as <device>.  Returns success whether an ESP partition was
         found or not. An empty string sigifies no ESP partition was found.
         Failure indicates a problem with the command line argument or a
