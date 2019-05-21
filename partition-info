@@ -2,8 +2,8 @@
 
 ME=${0##*/}
 
-VERSION="1.10.01"
-VERSION_DATE="Wed May  8 12:09:46 MDT 2019"
+VERSION="1.11.00"
+VERSION_DATE="Tue 21 May 2019 05:03:40 AM MDT"
 
 MAJOR_LIST="3,8,22,179,202,254,259"
 # See the Linux kernel file Documentation/devices.txt for device numbers
