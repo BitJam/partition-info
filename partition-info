@@ -1,6 +1,7 @@
 #!/bin/bash
 
 ME=${0##*/}
+#set -xv
 
 VERSION="1.11.00"
 VERSION_DATE="Tue 21 May 2019 05:03:40 AM MDT"
@@ -496,49 +497,22 @@ get_drive() {
     local drive part=${1##*/}
     case $part in
             mmcblk*p[1-9]) echo ${part%p[1-9]}         ;;
+            mmcblk*p[1-9]) echo ${part%p[1-9]}         ;;
        mmcblk*p[1-9][0-9]) echo ${part%p[1-9][0-9]}    ;;
               nvme*p[1-9]) echo ${part%p[1-9]}         ;;
          nvme*p[1-9][0-9]) echo ${part%p[1-9][0-9]}    ;;
+                  mmcblk*) drive=${part}; echo ${part}                ;;
+                    nvme*) drive=${part}; echo ${part}                ;;
               *) drive=${part%[0-9]}  ; echo ${drive%[0-9]} ;;
     esac
 }
 
 get_size() {
-    local part="/dev/${1#/dev/}"
-    local human=$(lsblk -dno size "$part")
-    #echo "$part $human $(human_to_meg)" >&2
-    human_to_meg "$human"
-}
-
-human_to_meg() {
-    local human=$1
-
-    local raw factor  meg=$((1024 * 1024))
-    local gig=$((meg * 1024))
-    local ter=$((gig * 1024))
-    local pet=$((ter * 1024))
-
-    case $human in
-        *[mM]) raw=${human%[mM]}  ; factor=1    ;;
-        *[gG]) raw=${human%[gG]}  ; factor=1024 ;;
-        *[gG]) raw=${human%[gG]}  ; factor=$meg ;;
-        *[tT]) raw=${human%[tT]}  ; factor=$gig ;;
-        *[pP]) raw=${human%[pP]}  ; factor=$ter ;;
-        *[eE]) raw=${human%[eE]}  ; factor=$pet ;;
-            *) raw=0              ; factor=0    ;;
-    esac
-
-    awk "BEGIN{printf \"%d\n\", $raw * $factor}"
-}
-
-
-get_size_old() {
     local part=${1##*/}
     local drive=$(get_drive $part)
     local path=$drive
     [ "$drive" != "$part" ] && path=$drive/$part
     local file=/sys/block/$path/size
-    echo "size_file: $file" >&2
     test -r $file && cat $file
 }
 
@@ -564,7 +538,7 @@ greater_than_min_size() {
     [ -z "$MIN_SIZE" ] && return 0
     local raw_size=$(get_size $dev)
     [ -z "$raw_size" ] && return 1
-    [ "$raw_size" -gt $MIN_SIZE ]
+    [ $((raw_size / 2 / 1024)) -gt $MIN_SIZE ]
     return $?
 }
 
