@@ -40,8 +40,8 @@ MAJOR_LIST="3,8,22,179,202,254,259"
 
 LSBLK_ARGS="--pairs --noheadings"
 DRIVE_ARGS="$LSBLK_ARGS --nodeps"
-DRIVE_FIELDS="name,size,rota,rm,uuid,model"
-PARTS_FIELDS="name,size,fstype,parttype,type,uuid"
+DRIVE_FIELDS="NAME,SIZE,ROTA,RM,UUID,MODEL"
+PARTS_FIELDS="NAME,SIZE,FSTYPE,PARTTYPE,TYPE,UUID"
 
 LIVE_CONFIG=/live/config/initrd.out
 
@@ -252,7 +252,7 @@ do_find_esp() {
     test -b /dev/$drive || fatal "Root device /dev/$drive not found"
 
     local expr="(c12a7328-f81f-11d2-ba4b-00a0c93ec93b|0xef)$"
-    lsblk -nlo name,parttype /dev/$drive | egrep "$expr" | head -n1 | awk '{print $1}'
+    lsblk -nlo NAME,PARTTYPE /dev/$drive | egrep "$expr" | head -n1 | awk '{print $1}'
 }
 
 do_find_esps() {
@@ -266,7 +266,7 @@ do_find_esps() {
     test -b /dev/$drive || fatal "Root device /dev/$drive not found"
 
     local expr="(c12a7328-f81f-11d2-ba4b-00a0c93ec93b|0xef)$"
-    lsblk -nlo name,parttype /dev/$drive | egrep "$expr" | awk '{print $1}'
+    lsblk -nlo NAME,PARTTYPE /dev/$drive | egrep "$expr" | awk '{print $1}'
 }
 
 do_split_device() {
@@ -307,7 +307,7 @@ do_is_linux() {
     test -b $dev || fatal "device $dev is not a block device"
 
     local FSTYPE PARTTYPE
-    eval $(lsblk -Pno fstype,parttype $dev)
+    eval $(lsblk -Pno FSTYPE,PARTTYPE $dev)
 
     # See: http://sourceforge.net/p/gptfdisk/code/ci/master/tree/parttypes.cc
     case $PARTTYPE in
@@ -423,7 +423,7 @@ _do_parts() {
     [ "$ONLY_SWAP" ]  && EX_SWAP=
 
     local dev_width=$(get_dev_width $MAJOR_ARG $the_dev)
-    local  fs_width=$(get_field_width fstype -n $MAJOR_ARG $the_dev)
+    local  fs_width=$(get_field_width FSTYPE -n $MAJOR_ARG $the_dev)
 
     local format lablab
     if [ "$TAB_DELIMIT" ]; then
@@ -484,7 +484,7 @@ _do_parts() {
             esac
         fi
         # This is slower but it preserves special chars in labels
-        local label=$(lsblk /dev/$NAME -no label)
+        local label=$(lsblk /dev/$NAME -no LABEL)
         [ -n "$label" -a -z "$TAB_DELIMIT" ] && label=" - $label"
         printf "$format" "$DEV_OUTPUT$NAME" "$SIZE" "$FSTYPE" "$label"
         echo
@@ -529,7 +529,7 @@ is_usb() {
 contains_boot_partition() {
     local dev=$1
     [ -z "$BOOT_UUID" ] && return 1
-    lsblk -no uuid $dev | grep -q "^$BOOT_UUID$"
+    lsblk -no UUID $dev | grep -q "^$BOOT_UUID$"
     return $?
 }
 
@@ -544,12 +544,12 @@ greater_than_min_size() {
 
 count_partitions() {
     local drive=$1
-    lsblk -no parttype $drive | grep . | grep -v "^0xf$" | wc -l
+    lsblk -no PARTTYPE $drive | grep . | grep -v "^0xf$" | wc -l
 }
 
 all_mountpoints() {
     local drive=$1
-    local mps=$(lsblk -no mountpoint $drive | grep -v "^\[")
+    local mps=$(lsblk -no MOUNTPOINT $drive | grep -v "^\[")
     echo $mps
 }
 
@@ -574,7 +574,7 @@ Get_Field_Width
 }
 
 get_dev_width() {
-    local width=$(get_field_width name $*)
+    local width=$(get_field_width NAME $*)
     [ "$DEV_OUTPUT" ] && width=$((width + ${#DEV_OUTPUT}))
     echo $width
 }
@@ -582,7 +582,7 @@ get_dev_width() {
 
 all_labels() {
     local drive=$1
-    local labels=$(lsblk -no label $drive | sed -r '/./ s/^|$/"/g')
+    local labels=$(lsblk -no LABEL $drive | sed -r '/./ s/^|$/"/g')
     echo $labels
 }
 
